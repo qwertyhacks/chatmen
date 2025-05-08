@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Chat Room</title>
+    <title>Real-Time Chat Room</title>
     <style>
+        /* Basic styles */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f3f4f6;
@@ -93,13 +94,16 @@
         </div>
         <div class="chat-input-container">
             <input type="text" id="message-input" class="chat-input" placeholder="Type a message..." />
-            <button class="send-btn" onclick="sendMessage()">Send</button>
+            <button class="send-btn" id="send-btn">Send</button>
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io();
         const chatBox = document.getElementById('chat-box');
         const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
 
         // Function to append a message to the chat box
         function appendMessage(message, user = false) {
@@ -112,17 +116,23 @@
             chatBox.prepend(messageElement); // Prepend so that new messages appear at the bottom
         }
 
-        // Function to send a message
+        // Send message to the server
         function sendMessage() {
             const message = messageInput.value.trim();
             if (message) {
-                appendMessage(message, true); // Add user message
-                messageInput.value = ''; // Clear input field
-                setTimeout(() => {
-                    appendMessage('Response to: ' + message); // Simulated response after a short delay
-                }, 1000);
+                socket.emit('chatMessage', message); // Send message to the server
+                appendMessage(message, true); // Add user message to the UI
+                messageInput.value = ''; // Clear the input field
             }
         }
+
+        // Handle real-time incoming messages
+        socket.on('chatMessage', (msg) => {
+            appendMessage(msg); // Display incoming message
+        });
+
+        // Button click event
+        sendBtn.addEventListener('click', sendMessage);
 
         // Allow pressing "Enter" to send a message
         messageInput.addEventListener('keydown', (e) => {
